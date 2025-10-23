@@ -47,7 +47,6 @@ jobs:
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'  # ghi vào file, không in ra log
-          severity: 'CRITICAL,HIGH'
           vuln-type: 'os,library'
           hide-progress: 'true'
 
