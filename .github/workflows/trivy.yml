@@ -91,6 +91,15 @@ jobs:
           output: 'sbom.json'
           hide-progress: 'true'
 
+      - name: Inspect SBOM format
+        run: |
+          SBOM="/home/runner/work/SCA-Test/SCA-Test/sbom.json"
+          head -n 20 "$SBOM"
+          echo "---- quick keys ----"
+          jq -r '."bomFormat", ."specVersion", ."spdxVersion" // empty' "$SBOM" || true
+
+
+
       # 2) Upload SBOM lên Dependency-Track (API cổng 8081)
       - name: Upload SBOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@v3
