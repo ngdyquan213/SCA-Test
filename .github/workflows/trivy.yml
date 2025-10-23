@@ -83,15 +83,15 @@ jobs:
       - name: Generate CycloneDX SBOM
         uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
         with:
-          scan-type: 'image'                                # quan trọng!
+          # scan-type: 'image'                                # quan trọng!
           image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
           format: 'cyclonedx'                               # xuất CycloneDX JSON
           output: 'bom.json'                                # file đích trong $GITHUB_WORKSPACE
           # các option vuln dưới đây không ảnh hưởng khi format=cyclonedx (Trivy chỉ xuất SBOM),
           # có thể bỏ để gọn
-          # vuln-type: 'library'
-          # severity: 'HIGH,CRITICAL'
-          # ignore-unfixed: 'true'
+          vuln-type: 'library'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: 'true'
           hide-progress: 'true'
 
       # (khuyến nghị) Xác nhận file tồn tại
