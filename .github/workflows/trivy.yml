@@ -93,7 +93,7 @@ jobs:
 
       # 2) Upload SBOM lên Dependency-Track (API cổng 8081)
       - name: Upload SBOM to Dependency-Track
-        uses: DependencyTrack/gh-upload-sbom@v4
+        uses: DependencyTrack/gh-upload-sbom@v3
         with:
           protocol: 'http'                                   # hoặc 'https' nếu có TLS
           serverHostname: '3.1.100.224'                      # KHÔNG kèm http://, KHÔNG /projects
