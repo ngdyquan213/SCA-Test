@@ -68,11 +68,15 @@ jobs:
 
       # Upload SBOM lên Dependency-Track
       - name: Upload SBOM to Dependency-Track
-        uses: dependencytrack/cli-action@v1
+        uses: DependencyTrack/gh-upload-sbom@v3
         with:
-          serverUrl: 'http://3.1.100.224:8080'      # URL Dependency-Track của bạn
-          apiKey: ${{ secrets.DT_API_KEY }}               # API key (lưu trong GitHub Secrets)
-          projectName: 'my-app'                           # Tên project trong Dependency-Track
-          projectVersion: '${{ github.sha }}'             # Version: có thể dùng tag, commit hash...
-          bomFile: 'bom.json'                             # File SBOM được tạo ở bước trên
+          protocol: 'http'                   # vì bạn chạy cổng 8080 không TLS
+          serverHostname: '3.1.100.224'      # KHÔNG kèm /projects
+          port: '8080'
+          apiKey: ${{ secrets.DT_API_KEY }}  # token lấy ở Profile → Generate Token
+          projectName: 'my-app'
+          projectVersion: '${{ github.sha }}'
+          bomFilename: 'bom.json'
+          autoCreate: true
+
 
