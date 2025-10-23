@@ -83,20 +83,12 @@ jobs:
 
       # 1) Tạo SBOM CycloneDX từ filesystem
       - name: Generate CycloneDX SBOM (FS)
-        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'fs'          # tương đương "trivy fs ."
           scan-ref: '.'
           format: 'cyclonedx'
           output: 'sbom.json'
-          hide-progress: 'true'
-
-      - name: Inspect SBOM format
-        run: |
-          SBOM="/home/runner/work/SCA-Test/SCA-Test/sbom.json"
-          head -n 20 "$SBOM"
-          echo "---- quick keys ----"
-          jq -r '."bomFormat", ."specVersion", ."spdxVersion" // empty' "$SBOM" || true
 
       - name: Upload trivy report as a Github artifact
         uses: actions/upload-artifact@v4
@@ -105,17 +97,15 @@ jobs:
           path: '${{ github.workspace }}/sbom.json'
           retention-days: 20 # 90 is the default
 
-
-
-      # 2) Upload SBOM lên Dependency-Track (API cổng 8081)
-      - name: Upload SBOM to Dependency-Track
-        uses: DependencyTrack/gh-upload-sbom@v3
-        with:
-          protocol: 'http'                                   # hoặc 'https' nếu có TLS
-          serverHostname: '3.1.100.224'                      # KHÔNG kèm http://, KHÔNG /projects
-          port: '8081'                                       # API server (thường 8081)
-          apiKey: ${{ secrets.DT_API_KEY }}                  # token ở Profile → Generate Token
-          projectName: 'my-app'                              # sẽ tạo project nếu chưa có
-          projectVersion: '${{ github.sha }}'                # gắn theo commit
-          bomFilename: '${{ github.workspace }}/sbom.json'   # đường dẫn tuyệt đối
-          autoCreate: true
+      # # 2) Upload SBOM lên Dependency-Track (API cổng 8081)
+      # - name: Upload SBOM to Dependency-Track
+      #   uses: DependencyTrack/gh-upload-sbom@v3
+      #   with:
+      #     protocol: 'http'                                   # hoặc 'https' nếu có TLS
+      #     serverHostname: '3.1.100.224'                      # KHÔNG kèm http://, KHÔNG /projects
+      #     port: '8081'                                       # API server (thường 8081)
+      #     apiKey: ${{ secrets.DT_API_KEY }}                  # token ở Profile → Generate Token
+      #     projectName: 'my-app'                              # sẽ tạo project nếu chưa có
+      #     projectVersion: '${{ github.sha }}'                # gắn theo commit
+      #     bomFilename: '${{ github.workspace }}/sbom.json'   # đường dẫn tuyệt đối
+      #     autoCreate: true
