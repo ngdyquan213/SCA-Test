@@ -72,7 +72,7 @@ jobs:
         with:
           protocol: 'http'                   # vì bạn chạy cổng 8080 không TLS
           serverHostname: '3.1.100.224'      # KHÔNG kèm /projects
-          port: '8080'
+          port: '8081'
           apiKey: ${{ secrets.DT_API_KEY }}  # token lấy ở Profile → Generate Token
           projectName: 'my-app'
           projectVersion: '${{ github.sha }}'
