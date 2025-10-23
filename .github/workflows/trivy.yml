@@ -53,3 +53,26 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
+
+            # Sinh SBOM theo chuẩn CycloneDX từ Trivy
+      - name: Generate CycloneDX SBOM
+        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+        with:
+          image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
+          format: 'cyclonedx'
+          output: 'bom.json'
+          vuln-type: 'library'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: 'true'
+          hide-progress: 'true'
+
+      # Upload SBOM lên Dependency-Track
+      - name: Upload SBOM to Dependency-Track
+        uses: dependencytrack/cli-action@v1
+        with:
+          serverUrl: 'http://3.1.100.224:8080'      # URL Dependency-Track của bạn
+          apiKey: ${{ secrets.DT_API_KEY }}               # API key (lưu trong GitHub Secrets)
+          projectName: 'my-app'                           # Tên project trong Dependency-Track
+          projectVersion: '${{ github.sha }}'             # Version: có thể dùng tag, commit hash...
+          bomFile: 'bom.json'                             # File SBOM được tạo ở bước trên
+
