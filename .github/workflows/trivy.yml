@@ -110,7 +110,7 @@ jobs:
           apiKey: ${{ secrets.DT_API_KEY }}
           projectName: 'my-app'
           projectVersion: '${{ github.sha }}'
-          bomFilename: '${{ github.workspace }}/bom.json'  # dùng path tuyệt đối cho chắc
+          bomFilename: 'docker.io/my-organization/my-app/bom.json'  # dùng path tuyệt đối cho chắc
           autoCreate: true
 
 
