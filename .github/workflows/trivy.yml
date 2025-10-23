@@ -27,56 +27,90 @@ jobs:
         run: |
           docker build -t docker.io/my-organization/my-app:${{ github.sha }} .
 
-      # NEW: In CVE ra log của GitHub Actions
-      - name: Run Trivy (print to logs)
-        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
-        with:
-          image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
-          format: 'table'             # in ra stdout (log)
-          vuln-type: 'library'     # quét cả OS package & app deps
-          ignore-unfixed: 'true'      # tùy chọn: ẩn CVE chưa có fix để log đỡ ồn
-          exit-code: '0'              # đặt '1' nếu muốn fail job khi có lỗ hổng
-          hide-progress: 'true'
+      # # NEW: In CVE ra log của GitHub Actions
+      # - name: Run Trivy (print to logs)
+      #   uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+      #   with:
+      #     image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
+      #     format: 'table'             # in ra stdout (log)
+      #     vuln-type: 'library'     # quét cả OS package & app deps
+      #     ignore-unfixed: 'true'      # tùy chọn: ẩn CVE chưa có fix để log đỡ ồn
+      #     exit-code: '0'              # đặt '1' nếu muốn fail job khi có lỗ hổng
+      #     hide-progress: 'true'
 
-      # Giữ step tạo SARIF để upload vào Security tab
-      - name: Run Trivy (generate SARIF)
-        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
-        with:
-          image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'  # ghi vào file, không in ra log
-          vuln-type: 'library'
-          hide-progress: 'true'
+      # # Giữ step tạo SARIF để upload vào Security tab
+      # - name: Run Trivy (generate SARIF)
+      #   uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+      #   with:
+      #     image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
+      #     format: 'template'
+      #     template: '@/contrib/sarif.tpl'
+      #     output: 'trivy-results.sarif'  # ghi vào file, không in ra log
+      #     vuln-type: 'library'
+      #     hide-progress: 'true'
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
+      # - name: Upload Trivy scan results to GitHub Security tab
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     sarif_file: 'trivy-results.sarif'
 
-            # Sinh SBOM theo chuẩn CycloneDX từ Trivy
+      #       # Sinh SBOM theo chuẩn CycloneDX từ Trivy
+      # - name: Generate CycloneDX SBOM
+      #   uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+      #   with:
+      #     image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
+      #     format: 'cyclonedx'
+      #     output: 'bom.json'
+      #     vuln-type: 'library'
+      #     severity: 'HIGH,CRITICAL'
+      #     ignore-unfixed: 'true'
+      #     hide-progress: 'true'
+
+      # # Upload SBOM lên Dependency-Track
+      # - name: Upload SBOM to Dependency-Track
+      #   uses: DependencyTrack/gh-upload-sbom@v3
+      #   with:
+      #     protocol: 'http'                   # vì bạn chạy cổng 8080 không TLS
+      #     serverHostname: '3.1.100.224'      # KHÔNG kèm /projects
+      #     port: '8081'
+      #     apiKey: ${{ secrets.DT_API_KEY }}  # token lấy ở Profile → Generate Token
+      #     projectName: 'my-app'
+      #     projectVersion: '${{ github.sha }}'
+      #     bomFilename: 'bom.json'
+      #     autoCreate: true
+
+      # 1) Generate CycloneDX SBOM for the built image
       - name: Generate CycloneDX SBOM
         uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
         with:
+          scan-type: 'image'                                # quan trọng!
           image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
-          format: 'cyclonedx'
-          output: 'bom.json'
-          vuln-type: 'library'
-          severity: 'HIGH,CRITICAL'
-          ignore-unfixed: 'true'
+          format: 'cyclonedx'                               # xuất CycloneDX JSON
+          output: 'bom.json'                                # file đích trong $GITHUB_WORKSPACE
+          # các option vuln dưới đây không ảnh hưởng khi format=cyclonedx (Trivy chỉ xuất SBOM),
+          # có thể bỏ để gọn
+          # vuln-type: 'library'
+          # severity: 'HIGH,CRITICAL'
+          # ignore-unfixed: 'true'
           hide-progress: 'true'
 
-      # Upload SBOM lên Dependency-Track
+      # (khuyến nghị) Xác nhận file tồn tại
+      - name: Verify SBOM file exists
+        run: |
+          ls -lah
+          jq -r '.bomFormat, .specVersion, .serialNumber' bom.json || true  # nhìn nhanh metadata
+
+      # 2) Upload SBOM to Dependency-Track (gọi API server)
       - name: Upload SBOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@v3
         with:
-          protocol: 'http'                   # vì bạn chạy cổng 8080 không TLS
-          serverHostname: '3.1.100.224'      # KHÔNG kèm /projects
-          port: '8081'
-          apiKey: ${{ secrets.DT_API_KEY }}  # token lấy ở Profile → Generate Token
+          protocol: 'http'                                 # http hoặc https
+          serverHostname: '3.1.100.224'                    # KHÔNG kèm http://, KHÔNG /projects
+          port: '8081'                                     # API server (thường 8081)
+          apiKey: ${{ secrets.DT_API_KEY }}
           projectName: 'my-app'
           projectVersion: '${{ github.sha }}'
-          bomFilename: 'bom.json'
+          bomFilename: '${{ github.workspace }}/bom.json'  # dùng path tuyệt đối cho chắc
           autoCreate: true
 
 
