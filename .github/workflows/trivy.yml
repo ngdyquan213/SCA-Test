@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
-          token: ${{ secrets.GHA_CICD_TOKEN }}   # PAT có quyền read repo mục tiêu
+          token: ${{ secrets.TEST_API_KEY }}   # PAT có quyền read repo mục tiêu
           ref: 'main'
 
       - name: Generate SARIF (FS)
