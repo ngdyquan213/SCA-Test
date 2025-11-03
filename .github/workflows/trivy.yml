@@ -61,10 +61,52 @@ jobs:
           exit-code: '0'
           hide-progress: 'true'
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
+      - name: Upload SARIF to target repo (REST)
+        shell: bash
+        env:
+          TARGET_REPO: ${{ github.event.inputs.repository }} # owner/repo
+          TARGET_REF: ${{ github.event.inputs.ref }}         # main/master (branch)
+          GH_PAT: ${{ secrets.TEST_CI_CD }}             # PAT with repo + security_events
+        run: |
+          set -euo pipefail
+
+          # Lấy sha thật của repo mục tiêu vừa checkout
+          TARGET_SHA=$(git rev-parse HEAD)
+          echo "Target sha: $TARGET_SHA; ref: $TARGET_REF; repo: $TARGET_REPO"
+
+          # Chuẩn bị payload: sarif phải gzip + base64 không xuống dòng
+          SARIF_B64=$(gzip -c trivy-results.sarif | base64 -w 0)
+
+          # GitHub API đòi format ref là refs/heads/<branch> hoặc refs/tags/<tag>
+          if [[ "$TARGET_REF" == refs/* ]]; then
+            REF_FULL="$TARGET_REF"
+          else
+            REF_FULL="refs/heads/$TARGET_REF"
+          fi
+
+          OWNER="${TARGET_REPO%%/*}"
+          REPO="${TARGET_REPO##*/}"
+
+          JSON_PAYLOAD=$(jq -n \
+            --arg sarif "$SARIF_B64" \
+            --arg sha "$TARGET_SHA" \
+            --arg ref "$REF_FULL" \
+            --arg tool "trivy" \
+            '{ sarif: $sarif, commit_sha: $sha, ref: $ref, tool_name: $tool }')
+
+          echo "Uploading SARIF to https://api.github.com/repos/$OWNER/$REPO/code-scanning/sarifs"
+          curl -sS -X POST \
+            -H "Authorization: Bearer $GH_PAT" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$OWNER/$REPO/code-scanning/sarifs" \
+            -d "$JSON_PAYLOAD" \
+            | jq .
+
+      # - name: Upload Trivy scan results to GitHub Security tab
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     sarif_file: 'trivy-results.sarif'
 
       - name: Trivy FS scan (fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@0.28.0
