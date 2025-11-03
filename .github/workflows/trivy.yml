@@ -7,6 +7,10 @@ on:
         description: 'Repository to scan (owner/repo name only)'
         required: true
         default: 'security-cicd'
+      version:
+        description: 'Trivy Action version to use'
+        required: false
+        default: '0.28.0'
 
 permissions:
   actions: read
@@ -89,11 +93,7 @@ jobs:
           scan-ref: '.'
           format: 'cyclonedx'
           output: 'sbom.json'
-
-      - name: Capture target SHA
-        id: sha
-        run: echo "TARGET_SHA=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-
+          
       - name: Upload SBOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@v3
         with:
@@ -102,6 +102,6 @@ jobs:
           port: ${{ secrets.TEST_PORT }}
           apiKey: ${{ secrets.TEST_API_KEY }}
           projectName: '${{ github.event.inputs.repository }}'
-          projectVersion: '${{ steps.sha.outputs.TARGET_SHA }}'
+          projectVersion: 'v${{ github.run_number }}'
           bomFilename: '${{ github.workspace }}/sbom.json'
           autoCreate: true
