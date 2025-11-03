@@ -7,10 +7,6 @@ on:
         description: 'Repository to scan (owner/repo name only)'
         required: true
         default: 'security-cicd'
-      version:
-        description: 'Trivy Action version to use'
-        required: false
-        default: '0.28.0'
 
 permissions:
   actions: read
@@ -93,7 +89,7 @@ jobs:
           scan-ref: '.'
           format: 'cyclonedx'
           output: 'sbom.json'
-          
+
       - name: Upload SBOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@v3
         with:
