@@ -78,7 +78,7 @@ jobs:
       - name: Checkout target repo
         uses: actions/checkout@v4
         with:
-          repository: 'Vietnam-Silicon/${{ github.event.inputs.repository }}'
+          repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
           token: ${{ secrets.TEST_CI_CD}}
           ref: 'main'
 
