@@ -6,11 +6,11 @@ on:
       repository:
         description: 'Repository to scan (owner/repo name only)'
         required: true
-        default: 'security-cicd'
-      version:
-        description: 'Trivy Action version to use'
-        required: false
-        default: '0.28.0'
+        default: 'SCA-Test'
+      # version:
+      #   description: 'Trivy Action version to use'
+      #   required: false
+      #   default: '0.28.0'
 
 permissions:
   actions: read
