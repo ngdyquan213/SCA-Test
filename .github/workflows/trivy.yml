@@ -142,6 +142,6 @@ jobs:
           port: ${{ secrets.TEST_PORT }}
           apiKey: ${{ secrets.TEST_API_KEY }}
           projectName: '${{ github.event.inputs.repository }}'
-          projectVersion: 'v${{ github.run_number }}'
+          projectVersion: ${{ steps.ver.outputs.version }}
           bomFilename: '${{ github.workspace }}/sbom.json'
           autoCreate: true
