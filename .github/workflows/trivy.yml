@@ -36,13 +36,13 @@ jobs:
           persist-credentials: false
 
       - name: Generate SARIF (FS)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
         with:
-          scan-type: 'fs'
+          scan-type: 'fs'          
           scan-ref: '.'
           format: 'template'
           template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'
+          output: 'trivy-results.sarif'  
           vuln-type: 'library'
           severity: ${{ env.TRIVY_SEVERITY }}
           ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
