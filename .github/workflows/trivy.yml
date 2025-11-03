@@ -44,7 +44,7 @@ jobs:
         uses: DependencyTrack/gh-upload-sbom@v3
         with:
           protocol: 'http'                                   # hoặc 'https' nếu có TLS
-          serverHostname: '3.1.100.224'                      # KHÔNG kèm http://, KHÔNG /projects
+          serverHostname: '47.130.142.236'                      # KHÔNG kèm http://, KHÔNG /projects
           port: '8081'                                       # API server (thường 8081)
           apiKey: ${{ secrets.DT_API_KEY }}                  # token ở Profile → Generate Token
           projectName: 'my-app'                              # sẽ tạo project nếu chưa có
