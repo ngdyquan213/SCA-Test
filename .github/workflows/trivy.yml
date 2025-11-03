@@ -1,53 +1,106 @@
-name: trivy
+name: security-gate-trivy
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  schedule:
-    - cron: '32 16 * * 0'
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository to scan (owner/repo name only)'
+        required: true
+        default: 'security-cicd'
 
 permissions:
-  contents: write
+  actions: read
+  contents: read
+  security-events: write
+
+env:
+  TRIVY_SEVERITY: "HIGH,CRITICAL"
+  TRIVY_IGNORE_UNFIXED: "false"
+
+concurrency:
+  group: security-${{ github.event.inputs.repository }}-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  trivy_gate:
+    name: Trivy Gate (fail-fast)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          repository: 'Vietnam-Silicon/${{ github.event.inputs.repository }}'
+          token: ${{ secrets.GHA_CICD_TOKEN }}   # PAT có quyền read repo mục tiêu
+          ref: 'main'
+
+      - name: Generate SARIF (FS)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+          vuln-type: 'library'
+          severity: ${{ env.TRIVY_SEVERITY }}
+          ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
+          exit-code: '0'
+          hide-progress: 'true'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Trivy FS scan (fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: ${{ env.TRIVY_SEVERITY }}
+          ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
+          exit-code: '1'
+          hide-progress: 'true'
+
+  trivy_report:
+    name: Trivy Report (SARIF & SBOM)
+    runs-on: ubuntu-latest   # hoặc prod-runner-set nếu đã sẵn
+    needs: trivy_gate
+    if: always()
     permissions:
       contents: read
       security-events: write
       actions: read
-    name: Build
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout target repo
         uses: actions/checkout@v4
+        with:
+          repository: 'Vietnam-Silicon/${{ github.event.inputs.repository }}'
+          token: ${{ secrets.TEST_CI_CD}}
+          ref: 'main'
 
-      # 1) Tạo SBOM CycloneDX từ filesystem
-      - name: Generate CycloneDX SBOM (FS)
+      - name: Generate CycloneDX SBOM
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          scan-type: 'fs'          # tương đương "trivy fs ."
+          scan-type: 'fs'
           scan-ref: '.'
           format: 'cyclonedx'
           output: 'sbom.json'
 
-      - name: Upload trivy report as a Github artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-sbom-report
-          path: '${{ github.workspace }}/sbom.json'
-          retention-days: 20 # 90 is the default
+      - name: Capture target SHA
+        id: sha
+        run: echo "TARGET_SHA=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-      # 2) Upload SBOM lên Dependency-Track (API cổng 8081)
       - name: Upload SBOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@v3
         with:
-          protocol: 'http'                                   # hoặc 'https' nếu có TLS
-          serverHostname: '47.130.142.236'                      # KHÔNG kèm http://, KHÔNG /projects
-          port: '8081'                                       # API server (thường 8081)
-          apiKey: ${{ secrets.DT_API_KEY }}                  # token ở Profile → Generate Token
-          projectName: 'my-app'                              # sẽ tạo project nếu chưa có
-          projectVersion: '${{ github.sha }}'                # gắn theo commit
-          bomFilename: '${{ github.workspace }}/sbom.json'   # đường dẫn tuyệt đối
+          protocol: 'http'
+          serverHostname: ${{ secrets.TEST_HOSTNAME }}
+          port: ${{ secrets.TEST_PORT }}
+          apiKey: ${{ secrets.TEST_API_KEY }}
+          projectName: '${{ github.event.inputs.repository }}'
+          projectVersion: '${{ steps.sha.outputs.TARGET_SHA }}'
+          bomFilename: '${{ github.workspace }}/sbom.json'
           autoCreate: true

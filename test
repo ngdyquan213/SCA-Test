@@ -1,0 +1,53 @@
+name: trivy
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '32 16 * * 0'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 1) Tạo SBOM CycloneDX từ filesystem
+      - name: Generate CycloneDX SBOM (FS)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'          # tương đương "trivy fs ."
+          scan-ref: '.'
+          format: 'cyclonedx'
+          output: 'sbom.json'
+
+      - name: Upload trivy report as a Github artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-sbom-report
+          path: '${{ github.workspace }}/sbom.json'
+          retention-days: 20 # 90 is the default
+
+      # 2) Upload SBOM lên Dependency-Track (API cổng 8081)
+      - name: Upload SBOM to Dependency-Track
+        uses: DependencyTrack/gh-upload-sbom@v3
+        with:
+          protocol: 'http'                                  
+          serverHostname: '47.130.142.236'                      
+          port: 8081                                     
+          apiKey: ${{ secrets.DT_API_KEY }}   
+          projectName: 'my-app'                              
+          projectVersion: '${{ github.sha }}'                
+          bomFilename: '${{ github.workspace }}/sbom.json'  
+          autoCreate: true
