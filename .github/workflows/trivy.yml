@@ -35,8 +35,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
-          token: ${{ secrets.TEST_CI_CD }}   # PAT có quyền read repo mục tiêu
-          ref: 'main'
+          token: ${{ secrets.TEST_CI_CD }}  
+          ref: 'master'
           persist-credentials: false
 
       - name: Generate SARIF (FS)
@@ -84,7 +84,7 @@ jobs:
         with:
           repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
           token: ${{ secrets.TEST_CI_CD}}
-          ref: 'main'
+          ref: 'master'
 
       - name: Generate CycloneDX SBOM
         uses: aquasecurity/trivy-action@0.28.0
