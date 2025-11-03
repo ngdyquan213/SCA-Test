@@ -7,10 +7,14 @@ on:
         description: 'Repository to scan (owner/repo name only)'
         required: true
         default: 'SCA-Test'
-      # version:
-      #   description: 'Trivy Action version to use'
-      #   required: false
-      #   default: '0.28.0'
+      ref:
+        description: 'Branch or tag to scan'
+        required: true
+        type: choice
+        options:
+          - main
+          - master
+        default: 'main'
 
 permissions:
   actions: read
@@ -40,7 +44,7 @@ jobs:
         with:
           repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
           token: ${{ secrets.TEST_CI_CD }}  
-          ref: 'main'
+          ref: '${{ github.event.inputs.ref }}'
           persist-credentials: false
 
       - name: Generate SARIF (FS)
@@ -88,7 +92,7 @@ jobs:
         with:
           repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
           token: ${{ secrets.TEST_CI_CD}}
-          ref: 'main'
+          ref: '${{ github.event.inputs.ref }}'
 
       - name: Generate CycloneDX SBOM
         uses: aquasecurity/trivy-action@0.28.0
@@ -97,10 +101,6 @@ jobs:
           scan-ref: '.'
           format: 'cyclonedx'
           output: 'sbom.json'
-
-      # - name: Capture target SHA
-      #   id: sha
-      #   run: echo "TARGET_SHA=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - name: Resolve next projectVersion (v1, v2, v3, ...)
         id: ver
