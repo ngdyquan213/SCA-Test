@@ -1,4 +1,4 @@
-name: security-gate-trivy
+name: security-trivy-scan-repo
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
       repository:
         description: 'Repository to scan (owner/repo name only)'
         required: true
-        default: 'HotelBooking'
+        default: 'security-cicd'
       ref:
         description: 'Branch or tag to scan'
         required: true
@@ -14,7 +14,7 @@ on:
         options:
           - main
           - master
-        default: 'master'
+        default: 'main'
 
 permissions:
   actions: read
@@ -25,9 +25,9 @@ env:
   TRIVY_SEVERITY: "HIGH,CRITICAL"
   TRIVY_IGNORE_UNFIXED: "false"
   DT_PROTO: http
-  DT_HOST: ${{ secrets.TEST_HOSTNAME }}
-  DT_PORT: ${{ secrets.TEST_PORT }}
-  DT_API_KEY: ${{ secrets.TEST_API_KEY }}
+  DT_HOST: ${{ secrets.DTRACK_HOSTNAME }}
+  DT_PORT: ${{ secrets.DTRACK_PORT }}
+  DT_API_KEY: ${{ secrets.DTRACK_API_KEY }}
 
 concurrency:
   group: security-${{ github.event.inputs.repository }}-${{ github.ref_name }}
@@ -42,8 +42,8 @@ jobs:
       - name: Checkout target repo
         uses: actions/checkout@v4
         with:
-          repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
-          token: ${{ secrets.TEST_CI_CD }}  
+          repository: 'Vietnam-Silicon/${{ github.event.inputs.repository }}'
+          token: ${{ secrets.GHA_CICD_TOKEN }}
           ref: '${{ github.event.inputs.ref }}'
           persist-credentials: false
 
@@ -61,52 +61,10 @@ jobs:
           exit-code: '0'
           hide-progress: 'true'
 
-      - name: Upload SARIF to target repo (REST)
-        shell: bash
-        env:
-          TARGET_REPO: ${{ github.event.inputs.repository }} # owner/repo
-          TARGET_REF: ${{ github.event.inputs.ref }}         # main/master (branch)
-          GH_PAT: ${{ secrets.TEST_CI_CD }}             # PAT with repo + security_events
-        run: |
-          set -euo pipefail
-
-          # Lấy sha thật của repo mục tiêu vừa checkout
-          TARGET_SHA=$(git rev-parse HEAD)
-          echo "Target sha: $TARGET_SHA; ref: $TARGET_REF; repo: $TARGET_REPO"
-
-          # Chuẩn bị payload: sarif phải gzip + base64 không xuống dòng
-          SARIF_B64=$(gzip -c trivy-results.sarif | base64 -w 0)
-
-          # GitHub API đòi format ref là refs/heads/<branch> hoặc refs/tags/<tag>
-          if [[ "$TARGET_REF" == refs/* ]]; then
-            REF_FULL="$TARGET_REF"
-          else
-            REF_FULL="refs/heads/$TARGET_REF"
-          fi
-
-          OWNER="${TARGET_REPO%%/*}"
-          REPO="${TARGET_REPO##*/}"
-
-          JSON_PAYLOAD=$(jq -n \
-            --arg sarif "$SARIF_B64" \
-            --arg sha "$TARGET_SHA" \
-            --arg ref "$REF_FULL" \
-            --arg tool "trivy" \
-            '{ sarif: $sarif, commit_sha: $sha, ref: $ref, tool_name: $tool }')
-
-          echo "Uploading SARIF to https://api.github.com/repos/$OWNER/$REPO/code-scanning/sarifs"
-          curl -sS -X POST \
-            -H "Authorization: Bearer $GH_PAT" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/$OWNER/$REPO/code-scanning/sarifs" \
-            -d "$JSON_PAYLOAD" \
-            | jq .
-
-      # - name: Upload Trivy scan results to GitHub Security tab
-      #   uses: github/codeql-action/upload-sarif@v3
-      #   with:
-      #     sarif_file: 'trivy-results.sarif'
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
 
       - name: Trivy FS scan (fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@0.28.0
@@ -119,9 +77,9 @@ jobs:
           exit-code: '1'
           hide-progress: 'true'
 
-  trivy_report:   
-    name: Trivy Report (SARIF & SBOM)
-    runs-on: ubuntu-latest   # hoặc prod-runner-set nếu đã sẵn
+  trivy_report:
+    name: Trivy Report (Create SBOM And Upload Dependency-Track)
+    runs-on: prod-runner-set  
     needs: trivy_gate
     if: always()
     permissions:
@@ -132,8 +90,8 @@ jobs:
       - name: Checkout target repo
         uses: actions/checkout@v4
         with:
-          repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
-          token: ${{ secrets.TEST_CI_CD}}
+          repository: 'Vietnam-Silicon/${{ github.event.inputs.repository }}'
+          token: ${{ secrets.GHA_CICD_TOKEN }}
           ref: '${{ github.event.inputs.ref }}'
 
       - name: Generate CycloneDX SBOM
@@ -174,15 +132,15 @@ jobs:
               echo "version=${ver}" >> "$GITHUB_OUTPUT"
               break
             fi
-          done        
+          done            
 
       - name: Upload SBOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@v3
         with:
-          protocol: 'http'
-          serverHostname: ${{ secrets.TEST_HOSTNAME }}
-          port: ${{ secrets.TEST_PORT }}
-          apiKey: ${{ secrets.TEST_API_KEY }}
+          protocol: 'https'
+          serverHostname: ${{ secrets.DTRACK_HOSTNAME }}
+          port: ${{ secrets.DTRACK_PORT }}
+          apiKey: ${{ secrets.DTRACK_API_KEY }}
           projectName: '${{ github.event.inputs.repository }}'
           projectVersion: ${{ steps.ver.outputs.version }}
           bomFilename: '${{ github.workspace }}/sbom.json'
