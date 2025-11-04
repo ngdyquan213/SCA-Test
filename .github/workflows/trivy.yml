@@ -15,6 +15,10 @@ on:
           - main
           - master
         default: 'master'
+      tags:
+        description: 'Tags to assign in Dependency-Track (comma-separated)'
+        required: false
+        default: ''
 
 permissions:
   actions: read
@@ -185,5 +189,6 @@ jobs:
           apiKey: ${{ secrets.TEST_API_KEY }}
           projectName: '${{ github.event.inputs.repository }}'
           projectVersion: ${{ steps.ver.outputs.version }}
+          projectTags: '${{ github.event.inputs.tags }}'
           bomFilename: '${{ github.workspace }}/sbom.json'
           autoCreate: true
