@@ -184,11 +184,11 @@ jobs:
         uses: DependencyTrack/gh-upload-sbom@v3
         with:
           protocol: 'http'
-          serverHostname: ${{ secrets.TEST_HOSTNAME }}
+          serverhostname: ${{ secrets.TEST_HOSTNAME }}
           port: ${{ secrets.TEST_PORT }}
-          apiKey: ${{ secrets.TEST_API_KEY }}
-          projectName: '${{ github.event.inputs.repository }}'
-          projectVersion: ${{ steps.ver.outputs.version }}
-          projectTags: '${{ github.event.inputs.tags }}'
-          bomFilename: '${{ github.workspace }}/sbom.json'
-          autoCreate: true
+          apikey: ${{ secrets.TEST_API_KEY }}
+          projectname: ${{ github.event.inputs.repository }}
+          projectversion: ${{ steps.ver.outputs.version }}
+          projecttags: ${{ github.event.inputs.tags }}
+          bomfilename: ${{ github.workspace }}/sbom.json
+          autocreate: true
