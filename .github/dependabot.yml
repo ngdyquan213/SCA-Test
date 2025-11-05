@@ -2,22 +2,22 @@ version: 2
 
 updates:
   # ── JavaScript/TypeScript (npm, pnpm, yarn)
-  # - package-ecosystem: "npm"
-  #   directory: "/"
-  #   schedule:
-  #     interval: "daily"
-  #   # PR cho cả cập nhật bình thường; Security Updates vẫn được kích hoạt tự động khi có CVE
-  #   open-pull-requests-limit: 10
-  #   labels: ["dependencies", "security"]
-  #   rebase-strategy: "auto"
-  #   commit-message:
-  #     prefix: "deps"
-  #     include: "scope"
-  #   groups:
-  #     security-patches:
-  #       applies-to: security-updates
-  #       patterns:
-  #         - "*"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    # PR cho cả cập nhật bình thường; Security Updates vẫn được kích hoạt tự động khi có CVE
+    open-pull-requests-limit: 10
+    labels: ["dependencies", "security"]
+    rebase-strategy: "auto"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      security-patches:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   # ── GitHub Actions (workflow actions)
   - package-ecosystem: "github-actions"
