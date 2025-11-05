@@ -107,10 +107,10 @@ jobs:
       #       -d "$JSON_PAYLOAD" \
       #       | jq .
 
-      # - name: Upload Trivy scan results to GitHub Security tab
-      #   uses: github/codeql-action/upload-sarif@v3
-      #   with:
-      #     sarif_file: 'trivy-results.sarif'
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
 
       - name: Trivy FS scan (fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@0.28.0
