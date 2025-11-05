@@ -1,0 +1,76 @@
+version: 2
+
+updates:
+  # --- Python (pip) ở thư mục gốc ---
+  - package-ecosystem: "pip"      # Theo dõi requirements*.txt, pip-compile, Pipenv
+    directory: "/"                # Đổi nếu file ở nơi khác, ví dụ "backend/"
+    schedule:
+      interval: "weekly"          # daily | weekly | monthly
+      day: "monday"               # (tùy chọn) chạy thứ mấy nếu weekly
+      time: "04:00"               # (tùy chọn) giờ UTC
+    target-branch: "main"         # Nhánh tạo PR
+    open-pull-requests-limit: 10
+    reviewers:
+      - "ngdyquan213"
+    assignees:
+      - "ngdyquan213"
+    labels:
+      - "dependencies"
+      - "python"
+      - "security"
+
+    # Tùy chỉnh message commit để log gọn đẹp
+    commit-message:
+      prefix: "chore(deps-py)"
+      include: "scope"
+
+    # Chiến lược cập nhật
+    versioning-strategy: "increase"   # increase | widen | lockfile-only | auto
+    rebase-strategy: "auto"           # Tự rebase khi có xung đột
+    allow:
+      - dependency-type: "all"        # prod + dev
+
+    # Bỏ qua một số nâng cấp nếu muốn (ví dụ skip major Django 5)
+    ignore:
+      - dependency-name: "Django"
+        update-types: ["version-update:semver-major"]
+
+    # Bật PR dành riêng cho bản vá bảo mật
+    security-updates: true
+
+    # Gom nhóm PR để đỡ bị “spam” nhiều PR lẻ
+    groups:
+      minor-and-patch:
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+      tooling:
+        patterns:
+          - "black"
+          - "isort"
+          - "mypy"
+          - "flake8"
+          - "ruff"
+      data-stack:
+        patterns:
+          - "pandas"
+          - "numpy"
+          - "scipy"
+          - "pyarrow"
+          - "polars"
+      web-stack:
+        patterns:
+          - "Django*"
+          - "fastapi"
+          - "starlette"
+          - "uvicorn"
+          - "gunicorn"
+
+  # --- Cập nhật GitHub Actions cho CI (khuyên dùng) ---
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "ci"
+      - "dependencies"
