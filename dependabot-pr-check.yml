@@ -1,31 +1,31 @@
-name: Dependabot PR Check
+# name: Dependabot PR Check
 
-on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+# on:
+#   pull_request:
+#     types: [opened, synchronize, reopened, ready_for_review]
 
-permissions:
-  contents: read
-  pull-requests: write
-  security-events: write
+# permissions:
+#   contents: read
+#   pull-requests: write
+#   security-events: write
 
-concurrency:
-  group: dependabot-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+# concurrency:
+#   group: dependabot-${{ github.event.pull_request.number }}
+#   cancel-in-progress: true
 
-jobs:
-  dependabot-only:
-    # Chỉ chạy cho PR do Dependabot mở
-    if: github.actor == 'dependabot[bot]'
-    runs-on: ubuntu-latest
+# jobs:
+#   dependabot-only:
+#     # Chỉ chạy cho PR do Dependabot mở
+#     if: github.actor == 'dependabot[bot]'
+#     runs-on: ubuntu-latest
 
-    steps:
-      # 🔐 Checkout pin theo SHA của PR (không theo tên nhánh)
-      - name: Checkout (pin by PR SHA)
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
+#     steps:
+#       # 🔐 Checkout pin theo SHA của PR (không theo tên nhánh)
+#       - name: Checkout (pin by PR SHA)
+#         uses: actions/checkout@v4
+#         with:
+#           ref: ${{ github.event.pull_request.head.sha }}
+#           fetch-depth: 0
 
     #   # (Tuỳ chọn) Thiết lập Python nếu repo của bạn là Python
     #   - name: Setup Python
