@@ -27,11 +27,11 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
-      # (Tuỳ chọn) Thiết lập Python nếu repo của bạn là Python
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    #   # (Tuỳ chọn) Thiết lập Python nếu repo của bạn là Python
+    #   - name: Setup Python
+    #     uses: actions/setup-python@v5
+    #     with:
+    #       python-version: '3.11'
 
       # Cài dependency nếu có requirements.txt
       - name: Install deps
