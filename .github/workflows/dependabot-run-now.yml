@@ -1,0 +1,12 @@
+name: Dependabot Run Now
+on: { workflow_dispatch: {} }
+permissions: { contents: write }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          gh api -X POST -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/dependabot/updates
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
