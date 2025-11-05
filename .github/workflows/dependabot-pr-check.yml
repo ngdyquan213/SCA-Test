@@ -1,0 +1,79 @@
+name: Dependabot PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+concurrency:
+  group: dependabot-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  dependabot-only:
+    # Chỉ chạy cho PR do Dependabot mở
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      # 🔐 Checkout pin theo SHA của PR (không theo tên nhánh)
+      - name: Checkout (pin by PR SHA)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      # (Tuỳ chọn) Thiết lập Python nếu repo của bạn là Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Cài dependency nếu có requirements.txt
+      - name: Install deps
+        if: hashFiles('requirements.txt') != ''
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # (Tuỳ chọn) Chạy test nếu có thư mục tests/ hoặc file test_*.py
+      - name: Run pytest (if present)
+        if: |
+          hashFiles('**/tests/**') != '' || hashFiles('**/test_*.py') != ''
+        run: |
+          pip install pytest
+          pytest -q
+
+    #   # (Tuỳ chọn) Quét lỗ hổng nhanh cho source bằng Trivy (FS)
+    #   - name: Trivy FS scan (optional)
+    #     uses: aquasecurity/trivy-action@0.28.0
+    #     with:
+    #       scan-type: 'fs'
+    #       scan-ref: '.'
+    #       format: 'sarif'
+    #       output: 'trivy.sarif'
+    #       ignore-unfixed: true
+    #       hide-progress: true
+    #   - name: Upload SARIF
+    #     if: always()
+    #     uses: github/codeql-action/upload-sarif@v3
+    #     with:
+    #       sarif_file: trivy.sarif
+
+    #   # (Tuỳ chọn) Bật auto-merge cho PR bảo mật khi CI xanh
+    #   - name: Enable auto-merge for security updates
+    #     if: always()
+    #     uses: dependabot/fetch-metadata@v2
+    #     id: meta
+    #     with:
+    #       github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    #   - name: Auto-merge (security only)
+    #     if: steps.meta.outputs.update-type == 'security'
+    #     uses: peter-evans/enable-pull-request-automerge@v3
+    #     with:
+    #       merge-method: squash
