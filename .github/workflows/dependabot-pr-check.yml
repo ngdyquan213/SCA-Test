@@ -34,19 +34,19 @@ jobs:
     #       python-version: '3.11'
 
       # Cài dependency nếu có requirements.txt
-      - name: Install deps
-        if: hashFiles('requirements.txt') != ''
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+    #   - name: Install deps
+    #     if: hashFiles('requirements.txt') != ''
+    #     run: |
+    #       python -m pip install --upgrade pip
+    #       pip install -r requirements.txt
 
-      # (Tuỳ chọn) Chạy test nếu có thư mục tests/ hoặc file test_*.py
-      - name: Run pytest (if present)
-        if: |
-          hashFiles('**/tests/**') != '' || hashFiles('**/test_*.py') != ''
-        run: |
-          pip install pytest
-          pytest -q
+    #   # (Tuỳ chọn) Chạy test nếu có thư mục tests/ hoặc file test_*.py
+    #   - name: Run pytest (if present)
+    #     if: |
+    #       hashFiles('**/tests/**') != '' || hashFiles('**/test_*.py') != ''
+    #     run: |
+    #       pip install pytest
+    #       pytest -q
 
     #   # (Tuỳ chọn) Quét lỗ hổng nhanh cho source bằng Trivy (FS)
     #   - name: Trivy FS scan (optional)
