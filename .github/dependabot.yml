@@ -1,109 +1,17 @@
 version: 2
 
 updates:
-  # ── JavaScript/TypeScript (npm, pnpm, yarn)
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: "pip"      # loại gói (Python)
+    directory: "/"                # thư mục chứa requirements.txt
     schedule:
-      interval: "daily"
-    # PR cho cả cập nhật bình thường; Security Updates vẫn được kích hoạt tự động khi có CVE
-    open-pull-requests-limit: 10
+      interval: "daily"           # chạy mỗi ngày
+      time: "07:00"               # UTC
+    open-pull-requests-limit: 10  # 👈 đặt ở đây!
     labels: ["dependencies", "security"]
     rebase-strategy: "auto"
     commit-message:
       prefix: "deps"
       include: "scope"
-    groups:
-      security-patches:
-        applies-to: security-updates
-        patterns:
-          - "*"
-
-  # ── GitHub Actions (workflow actions)
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    labels: ["dependencies", "security"]
-    rebase-strategy: "auto"
-    groups:
-      security-patches:
-        applies-to: security-updates
-        patterns:
-          - "*"
-
-  # ── Python (pip/requirements.txt, pipenv, poetry)
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    labels: ["dependencies", "security"]
-    rebase-strategy: "auto"
-    groups:
-      security-patches:
-        applies-to: security-updates
-        patterns:
-          - "*"
-
-  # ── Java (Maven)
-  - package-ecosystem: "maven"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    labels: ["dependencies", "security"]
-    rebase-strategy: "auto"
-    groups:
-      security-patches:
-        applies-to: security-updates
-        patterns:
-          - "*"
-
-  # ── Java/Kotlin (Gradle / Kotlin DSL)
-  - package-ecosystem: "gradle"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    labels: ["dependencies", "security"]
-    rebase-strategy: "auto"
-    groups:
-      security-patches:
-        applies-to: security-updates
-        patterns:
-          - "*"
-
-  # ── Go modules
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    labels: ["dependencies", "security"]
-    rebase-strategy: "auto"
-    groups:
-      security-patches:
-        applies-to: security-updates
-        patterns:
-          - "*"
-
-  # ── PHP (Composer)
-  - package-ecosystem: "composer"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    labels: ["dependencies", "security"]
-    rebase-strategy: "auto"
-    groups:
-      security-patches:
-        applies-to: security-updates
-        patterns:
-          - "*"
-
-  # ── Dockerfiles (base images)
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    labels: ["dependencies", "security"]
-    rebase-strategy: "auto"
     groups:
       security-patches:
         applies-to: security-updates
