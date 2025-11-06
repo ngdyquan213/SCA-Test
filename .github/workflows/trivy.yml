@@ -58,12 +58,13 @@ jobs:
       - name: Run Trivy (generate SARIF)
         uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
         with:
-          image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
+          scan-type: 'fs'          
+          scan-ref: '.'
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'  # ghi vào file, không in ra log
           severity: 'CRITICAL,HIGH'
-          vuln-type: 'os,library'
+          vuln-type: 'library'
           hide-progress: 'true'
 
 
