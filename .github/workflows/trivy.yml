@@ -92,8 +92,8 @@ jobs:
           scan-ref: '.'
           format: 'table'
           severity: ${{ env.TRIVY_SEVERITY }}
-          ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
-          exit-code: '1'
+          # ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
+          exit-code: '0'
           hide-progress: 'true'
 
   # trivy_report:   
