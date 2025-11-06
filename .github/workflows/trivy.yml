@@ -81,72 +81,72 @@ jobs:
           exit-code: '1'
           hide-progress: 'true'
 
-  # trivy_report:   
-  #   name: Trivy Report (SARIF & SBOM)
-  #   runs-on: ubuntu-latest   # hoặc prod-runner-set nếu đã sẵn
-  #   needs: trivy_gate
-  #   if: always()
-  #   permissions:
-  #     contents: read
-  #     security-events: write
-  #     actions: read
-  #   steps:
-  #     - name: Checkout target repo
-  #       uses: actions/checkout@v4
-  #       with:
-  #         repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
-  #         token: ${{ secrets.TEST_CI_CD}}
-  #         ref: '${{ github.event.inputs.ref }}'
+  trivy_report:   
+    name: Trivy Report (SARIF & SBOM)
+    runs-on: ubuntu-latest   # hoặc prod-runner-set nếu đã sẵn
+    needs: trivy_gate
+    if: always()
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
+          token: ${{ secrets.TEST_CI_CD}}
+          ref: '${{ github.event.inputs.ref }}'
 
-  #     - name: Generate CycloneDX SBOM
-  #       uses: aquasecurity/trivy-action@0.28.0
-  #       with:
-  #         scan-type: 'fs'
-  #         scan-ref: '.'
-  #         format: 'cyclonedx'
-  #         output: 'sbom.json'
+      - name: Generate CycloneDX SBOM
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'cyclonedx'
+          output: 'sbom.json'
 
-  #     - name: Resolve next projectVersion (v1, v2, v3, ...)
-  #       id: ver
-  #       shell: bash
-  #       env:
-  #         PROJECT_NAME: ${{ github.event.inputs.repository }}
-  #       run: |
-  #         set -euo pipefail
-  #         BASE="${DT_PROTO}://${DT_HOST}:${DT_PORT}"
+      - name: Resolve next projectVersion (v1, v2, v3, ...)
+        id: ver
+        shell: bash
+        env:
+          PROJECT_NAME: ${{ github.event.inputs.repository }}
+        run: |
+          set -euo pipefail
+          BASE="${DT_PROTO}://${DT_HOST}:${DT_PORT}"
 
-  #         # URL-encode project name an toàn
-  #         NAME_ENC=$(jq -rn --arg x "$PROJECT_NAME" '$x|@uri')
+          # URL-encode project name an toàn
+          NAME_ENC=$(jq -rn --arg x "$PROJECT_NAME" '$x|@uri')
 
-  #         echo "🔍 Finding next version for project: $PROJECT_NAME"
-  #         # Tăng dần từ v1 đến khi gặp version chưa tồn tại
-  #         n=1
-  #         max=1000  # guard tránh vòng lặp vô hạn nếu có sự cố
-  #         while (( n <= max )); do
-  #           ver="v${n}"
-  #           code=$(curl -s -o /dev/null -w "%{http_code}" \
-  #             -H "X-Api-Key: ${DT_API_KEY}" \
-  #             "${BASE}/api/v1/project/lookup?name=${NAME_ENC}&version=${ver}" || true)
-  #           if [[ "$code" == "200" ]]; then
-  #             # version đã tồn tại -> thử tiếp
-  #             ((n++))
-  #           else
-  #             # gặp version chưa tồn tại -> dùng nó
-  #             echo "✅ Using new version: ${ver}"
-  #             echo "version=${ver}" >> "$GITHUB_OUTPUT"
-  #             break
-  #           fi
-  #         done        
+          echo "🔍 Finding next version for project: $PROJECT_NAME"
+          # Tăng dần từ v1 đến khi gặp version chưa tồn tại
+          n=1
+          max=1000  # guard tránh vòng lặp vô hạn nếu có sự cố
+          while (( n <= max )); do
+            ver="v${n}"
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "X-Api-Key: ${DT_API_KEY}" \
+              "${BASE}/api/v1/project/lookup?name=${NAME_ENC}&version=${ver}" || true)
+            if [[ "$code" == "200" ]]; then
+              # version đã tồn tại -> thử tiếp
+              ((n++))
+            else 
+              # gặp version chưa tồn tại -> dùng nó
+              echo "✅ Using new version: ${ver}"
+              echo "version=${ver}" >> "$GITHUB_OUTPUT"
+              break
+            fi
+          done        
 
-  #     - name: Upload SBOM to Dependency-Track
-  #       uses: DependencyTrack/gh-upload-sbom@v3
-  #       with:
-  #         protocol: 'http'
-  #         serverhostname: ${{ secrets.TEST_HOSTNAME }}
-  #         port: ${{ secrets.TEST_PORT }}
-  #         apikey: ${{ secrets.TEST_API_KEY }}
-  #         projectname: ${{ github.event.inputs.repository }}
-  #         projectversion: ${{ steps.ver.outputs.version }}
-  #         projecttags: ${{ github.event.inputs.tags }}
-  #         bomfilename: ${{ github.workspace }}/sbom.json
-  #         autocreate: true
+      - name: Upload SBOM to Dependency-Track
+        uses: DependencyTrack/gh-upload-sbom@v3
+        with:
+          protocol: 'http'
+          serverhostname: ${{ secrets.TEST_HOSTNAME }}
+          port: ${{ secrets.TEST_PORT }}
+          apikey: ${{ secrets.TEST_API_KEY }}
+          projectname: ${{ github.event.inputs.repository }}
+          projectversion: ${{ steps.ver.outputs.version }}
+          projecttags: ${{ github.event.inputs.tags }}
+          bomfilename: ${{ github.workspace }}/sbom.json
+          autocreate: true
