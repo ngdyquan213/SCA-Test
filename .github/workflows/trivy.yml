@@ -60,16 +60,9 @@ jobs:
           output: 'trivy-results.sarif'  
           vuln-type: 'library'
           severity: ${{ env.TRIVY_SEVERITY }}
-          # ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
+          ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
           exit-code: '0'
           hide-progress: 'false'
-
-      - name: Verify SARIF file exists
-        run: |
-          ls -l trivy-results.sarif
-          head -n 20 trivy-results.sarif
-
-
           
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
