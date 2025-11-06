@@ -60,7 +60,7 @@ jobs:
           output: 'trivy-results.sarif'  
           vuln-type: 'library'
           severity: ${{ env.TRIVY_SEVERITY }}
-          ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
+          # ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
           exit-code: '0'
           hide-progress: 'false'
 
