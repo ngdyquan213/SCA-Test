@@ -26,7 +26,7 @@ permissions:
   security-events: write
 
 env:
-  TRIVY_SEVERITY: "HIGH,CRITICAL"
+  TRIVY_SEVERITY: "HIGH,CRITICAL,MEDIUM"
   TRIVY_IGNORE_UNFIXED: "false"
   DT_PROTO: http
   DT_HOST: ${{ secrets.TEST_HOSTNAME }}
@@ -85,15 +85,15 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
 
-      - name: Trivy FS scan (fail on HIGH/CRITICAL/MEDIUM)
+      - name: Trivy FS scan (fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'table'
           severity: ${{ env.TRIVY_SEVERITY }}
-          # ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
-          exit-code: '0'
+          ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
+          exit-code: '1'
           hide-progress: 'true'
 
   # trivy_report:   
