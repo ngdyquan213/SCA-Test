@@ -26,7 +26,7 @@ permissions:
   security-events: write
 
 env:
-  TRIVY_SEVERITY: "HIGH,CRITICAL"
+  TRIVY_SEVERITY: "HIGH,CRITICAL,MEDIUM"
   TRIVY_IGNORE_UNFIXED: "false"
   DT_PROTO: http
   DT_HOST: ${{ secrets.TEST_HOSTNAME }}
