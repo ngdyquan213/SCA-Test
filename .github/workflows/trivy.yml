@@ -1,4 +1,4 @@
-name: security-trivy-scan-repo
+name: security-gate-trivy
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
       repository:
         description: 'Repository to scan (owner/repo name only)'
         required: true
-        default: 'security-cicd'
+        default: 'SCA-Test'
       ref:
         description: 'Branch or tag to scan'
         required: true
@@ -15,6 +15,10 @@ on:
           - main
           - master
         default: 'main'
+      tags:
+        description: 'Tags to assign in Dependency-Track (comma-separated)'
+        required: false
+        default: ''
 
 permissions:
   actions: read
@@ -25,9 +29,11 @@ env:
   TRIVY_SEVERITY: "HIGH,CRITICAL"
   TRIVY_IGNORE_UNFIXED: "false"
   DT_PROTO: http
-  DT_HOST: ${{ secrets.DTRACK_HOSTNAME }}
-  DT_PORT: ${{ secrets.DTRACK_PORT }}
-  DT_API_KEY: ${{ secrets.DTRACK_API_KEY }}
+  DT_HOST: ${{ secrets.TEST_HOSTNAME }}
+  DT_PORT: ${{ secrets.TEST_PORT }}
+  DT_API_KEY: ${{ secrets.TEST_API_KEY }}
+
+
 
 concurrency:
   group: security-${{ github.event.inputs.repository }}-${{ github.ref_name }}
@@ -42,8 +48,8 @@ jobs:
       - name: Checkout target repo
         uses: actions/checkout@v4
         with:
-          repository: 'Vietnam-Silicon/${{ github.event.inputs.repository }}'
-          token: ${{ secrets.GHA_CICD_TOKEN }}
+          repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
+          token: ${{ secrets.TEST_CI_CD }}  
           ref: '${{ github.event.inputs.ref }}'
           persist-credentials: false
 
@@ -77,9 +83,9 @@ jobs:
           exit-code: '1'
           hide-progress: 'true'
 
-  trivy_report:
-    name: Trivy Report (Create SBOM And Upload Dependency-Track)
-    runs-on: prod-runner-set  
+  trivy_report:   
+    name: Trivy Report (SARIF & SBOM)
+    runs-on: ubuntu-latest   # hoặc prod-runner-set nếu đã sẵn
     needs: trivy_gate
     if: always()
     permissions:
@@ -90,8 +96,8 @@ jobs:
       - name: Checkout target repo
         uses: actions/checkout@v4
         with:
-          repository: 'Vietnam-Silicon/${{ github.event.inputs.repository }}'
-          token: ${{ secrets.GHA_CICD_TOKEN }}
+          repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
+          token: ${{ secrets.TEST_CI_CD}}
           ref: '${{ github.event.inputs.ref }}'
 
       - name: Generate CycloneDX SBOM
@@ -132,16 +138,17 @@ jobs:
               echo "version=${ver}" >> "$GITHUB_OUTPUT"
               break
             fi
-          done            
+          done        
 
       - name: Upload SBOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@v3
         with:
-          protocol: 'https'
-          serverHostname: ${{ secrets.DTRACK_HOSTNAME }}
-          port: ${{ secrets.DTRACK_PORT }}
-          apiKey: ${{ secrets.DTRACK_API_KEY }}
-          projectName: '${{ github.event.inputs.repository }}'
-          projectVersion: ${{ steps.ver.outputs.version }}
-          bomFilename: '${{ github.workspace }}/sbom.json'
-          autoCreate: true
+          protocol: 'http'
+          serverhostname: ${{ secrets.TEST_HOSTNAME }}
+          port: ${{ secrets.TEST_PORT }}
+          apikey: ${{ secrets.TEST_API_KEY }}
+          projectname: ${{ github.event.inputs.repository }}
+          projectversion: ${{ steps.ver.outputs.version }}
+          projecttags: ${{ github.event.inputs.tags }}
+          bomfilename: ${{ github.workspace }}/sbom.json
+          autocreate: true
