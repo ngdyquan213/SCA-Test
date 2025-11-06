@@ -51,31 +51,20 @@ jobs:
           repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
           token: ${{ secrets.TEST_CI_CD }}  
           ref: '${{ github.event.inputs.ref }}'
+
           persist-credentials: false
 
-      - name: Generate SARIF (FS)
+
+      - name: Run Trivy (generate SARIF)
         uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
         with:
-          scan-type: 'fs'          
-          scan-ref: '.'
+          image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
+          format: 'template'
           template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'  
-          vuln-type: 'library'
-          severity: ${{ env.TRIVY_SEVERITY }}
-          ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
-          exit-code: '0'
+          output: 'trivy-results.sarif'  # ghi vào file, không in ra log
+          severity: 'CRITICAL,HIGH'
+          vuln-type: 'os,library'
           hide-progress: 'true'
-
-      # - name: Trivy (FS) -> SARIF
-      #   uses: aquasecurity/trivy-action@0.28.0
-      #   with:
-      #     scan-type: 'fs'
-      #     scanners: 'vuln'
-      #     severity: 'HIGH,CRITICAL'
-      #     format: 'sarif'            # ✅ thay vì --template
-      #     output: 'trivy-results.sarif'
-      #   env:
-      #     TRIVY_IGNORE_UNFIXED: true
 
 
       - name: Upload Trivy scan results to GitHub Security tab
