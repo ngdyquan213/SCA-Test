@@ -98,13 +98,24 @@ jobs:
           token: ${{ secrets.TEST_CI_CD}}
           ref: '${{ github.event.inputs.ref }}'
 
-      - name: Generate CycloneDX SBOM
+      - name: Build image
+        run: docker build -t myapp:latest .
+
+      - name: Generate CycloneDX SBOM (image)
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
+          scan-type: 'image'
+          image-ref: 'myapp:latest'
           format: 'cyclonedx'
           output: 'sbom.json'
+
+      # - name: Generate CycloneDX SBOM
+      #   uses: aquasecurity/trivy-action@0.28.0
+      #   with:
+      #     scan-type: 'fs'
+      #     scan-ref: '.'
+      #     format: 'cyclonedx'
+      #     output: 'sbom.json'
 
       - name: Resolve next projectVersion (v1, v2, v3, ...)
         id: ver
