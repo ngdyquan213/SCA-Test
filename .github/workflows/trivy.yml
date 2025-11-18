@@ -79,6 +79,7 @@ jobs:
             --method POST \
             --input body.json
         env:
+          GH_TOKEN: ${{ secrets.TEST_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.TEST_API_KEY }}
       
           
