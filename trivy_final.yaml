@@ -61,6 +61,8 @@ jobs:
           exit-code: '0'
           hide-progress: 'true'
 
+          
+
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
