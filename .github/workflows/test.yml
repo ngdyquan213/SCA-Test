@@ -1,29 +1,41 @@
-name: security
+name: security-gate-trivy
 
 on:
   workflow_dispatch:
     inputs:
       repository:
-        description: 'Repository to scan Default'
+        description: 'Repository to scan (owner/repo name only)'
         required: true
-        default: 'vns-website-v2'
+        default: 'SCA'
       ref:
-        description: 'Branch'
+        description: 'Branch or tag to scan'
         required: true
-        default: 'develop'
+        type: choice
+        options:
+          - main
+          - master
+        default: 'main'
+      tags:
+        description: 'Tags to assign in Dependency-Track (comma-separated)'
+        required: false
+        default: ''
 
 permissions:
-  actions: read
+  actions: write
   contents: write
   security-events: write
 
 env:
-  TRIVY_SEVERITY: "HIGH,CRITICAL"
+  TRIVY_SEVERITY: "HIGH,CRITICAL,MEDIUM"
   TRIVY_IGNORE_UNFIXED: "false"
-  DT_PROTO: ${{ secrets.DTRACK_PROTOCOL }}
-  DT_HOST: ${{ secrets.DTRACK_HOSTNAME }}
-  DT_PORT: ${{ secrets.DTRACK_PORT }}
-  DT_API_KEY: ${{ secrets.DTRACK_API_KEY }}
+  DT_PROTO: http
+  DT_HOST: ${{ secrets.TEST_HOSTNAME }}
+  DT_PORT: ${{ secrets.TEST_PORT }}
+  DT_API_KEY: ${{ secrets.TEST_API_KEY }}
+
+concurrency:
+  group: security-${{ github.event.inputs.repository }}-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   trivy_gate:
@@ -34,10 +46,29 @@ jobs:
       - name: Checkout target repo
         uses: actions/checkout@v4
         with:
-          repository: 'Vietnam-Silicon/${{ github.event.inputs.repository }}'
-          token: ${{ secrets.GHA_CICD_TOKEN }}
+          repository: 'ngdyquan213/${{ github.event.inputs.repository }}'
+          token: ${{ secrets.TEST_CI_CD }}  
           ref: '${{ github.event.inputs.ref }}'
           persist-credentials: false
+
+      - name: Generate SARIF (FS)
+        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+        with:
+          scan-type: 'fs'          
+          scan-ref: '.'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'  
+          vuln-type: 'library'
+          severity: ${{ env.TRIVY_SEVERITY }}
+          ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
+          exit-code: '0'
+          hide-progress: 'false'
+          
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
 
       - name: Trivy FS scan (fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@0.28.0
@@ -47,29 +78,6 @@ jobs:
           format: 'table'
           severity: ${{ env.TRIVY_SEVERITY }}
           ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
-          exit-code: '0'
+          exit-code: '1'
           hide-progress: 'true'
 
-      - name: Generate CycloneDX SBOM
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'cyclonedx'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-          exit-code: 0
-          output: 'sbom.json'
-
-      - name: Upload SBOM to Dependency-Track
-        uses: DependencyTrack/gh-upload-sbom@v3
-        with:
-          protocol: ${{ secrets.DTRACK_PROTOCOL }}
-          serverHostname: ${{ secrets.DTRACK_HOSTNAME }}
-          port: ${{ secrets.DTRACK_PORT }}
-          apiKey: ${{ secrets.DTRACK_API_KEY }}
-          projectName: 'Vietnam-Silicon/${{ github.event.inputs.repository }}'
-          projectVersion:  ${{ steps.ver.outputs.version }}
-          bomFilename: '${{ github.workspace }}/sbom.json'
-          autoCreate: true
