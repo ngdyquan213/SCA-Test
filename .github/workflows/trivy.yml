@@ -21,8 +21,8 @@ on:
         default: ''
 
 permissions:
-  actions: read
-  contents: read
+  actions: write
+  contents: write
   security-events: write
 
 env:
@@ -80,7 +80,7 @@ jobs:
             --input body.json
         env:
           GH_TOKEN: ${{ secrets.TEST_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.TEST_API_KEY }}
+          # GITHUB_TOKEN: ${{ secrets.TEST_API_KEY }}
       
           
       - name: Upload Trivy scan results to GitHub Security tab
