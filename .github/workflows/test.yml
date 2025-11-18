@@ -71,7 +71,7 @@ jobs:
 
           JSON_PAYLOAD=$(jq -n \
             --arg sarif "$SARIF_CONTENT" \
-            --arg sha "${GITHUB_SHA}" \
+            --arg sha "0000000000000000000000000000000000000000" \
             --arg ref "refs/heads/${GITHUB_REF_NAME}" \
             '{ commit_sha: $sha, ref: $ref, sarif: $sarif }')
 
