@@ -65,10 +65,13 @@ jobs:
           exit-code: '0'
           hide-progress: 'false'
           
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
+      - name: Upload SARIF to Repo B
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.UPLOAD_SARIF_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d @"result.sarif" \
+            https://api.github.com/repos/ngdyquan213/${{ github.event.inputs.repository }}/code-scanning/sarifs
 
       - name: Trivy FS scan (fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@0.28.0
