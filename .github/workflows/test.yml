@@ -67,7 +67,7 @@ jobs:
 
       - name: Upload SARIF to Repo B
         run: |
-          SARIF_CONTENT=$(base64 -w0 result.sarif)
+          SARIF_CONTENT=$(base64 -w0 trivy-results.sarif)
 
           JSON_PAYLOAD=$(jq -n \
             --arg sarif "$SARIF_CONTENT" \
@@ -76,10 +76,10 @@ jobs:
             '{ commit_sha: $sha, ref: $ref, sarif: $sarif }')
 
           curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: token ${{ secrets.TEST_CI_CD }}" \
             -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD" \
-            "https://api.github.com/repos/ngdyquan213/SCA/code-scanning/sarifs"
+            "https://api.github.com/repos/ngdyquan213/${{ github.event.inputs.repository }}/code-scanning/sarifs"
 
           
       # - name: Upload SARIF to Repo B
