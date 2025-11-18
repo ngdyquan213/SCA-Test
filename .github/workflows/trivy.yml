@@ -64,6 +64,23 @@ jobs:
           ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
           exit-code: '0'
           hide-progress: 'false'
+
+
+      - name: Encode SARIF
+        run: echo "SARIF=$(base64 -w0 trivy-results.sarif)" >> $GITHUB_ENV
+
+      - name: Prepare payload
+        run: |
+          echo "{\"commit_sha\":\"${{ github.sha }}\",\"ref\":\"refs/heads/${{ github.ref_name }}\",\"sarif\":\"$SARIF\",\"tool_name\":\"scanner\"}" > body.json
+
+      - name: Upload to target repo
+        run: |
+          gh api repos/ngdyquan213/${{ github.event.inputs.repository }}/code-scanning/sarifs \
+            --method POST \
+            --input body.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.TEST_API_KEY }}
+      
           
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
