@@ -70,7 +70,7 @@ jobs:
           curl -X POST \
             -H "Authorization: token ${{ secrets.TEST_CI_CD }}" \
             -H "Content-Type: application/json" \
-            -d @"result.sarif" \
+            -d @"trivy-results.sarif" \
             https://api.github.com/repos/ngdyquan213/${{ github.event.inputs.repository }}/code-scanning/sarifs
 
       - name: Trivy FS scan (fail on HIGH/CRITICAL)
