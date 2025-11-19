@@ -33,13 +33,18 @@ jobs:
           ref: ${{ github.event.inputs.ref }}
 
       - name: Generate SARIF (FS)
-        run: |
-          trivy fs . \
-            --format sarif \
-            --output trivy-results.sarif \
-            --severity "${{ env.TRIVY_SEVERITY }}" \
-            --ignore-unfixed="${{ env.TRIVY_IGNORE_UNFIXED }}" \
-            --exit-code 0
+        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+        with:
+          scan-type: 'fs'          
+          scan-ref: '.'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'  
+          vuln-type: 'library'
+          severity: ${{ env.TRIVY_SEVERITY }}
+          ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
+          exit-code: '0'
+          hide-progress: 'false'
 
       - name: Upload SARIF to Repo B
         run: |
