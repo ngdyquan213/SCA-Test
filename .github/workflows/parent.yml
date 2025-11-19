@@ -51,42 +51,42 @@ jobs:
           ref: '${{ github.event.inputs.ref }}'
           persist-credentials: false
 
-      - name: Generate SARIF (FS)
-        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
-        with:
-          scan-type: 'fs'          
-          scan-ref: '.'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'  
-          vuln-type: 'library'
-          severity: ${{ env.TRIVY_SEVERITY }}
-          ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
-          exit-code: '0'
-          hide-progress: 'false'
+    #   - name: Generate SARIF (FS)
+    #     uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+    #     with:
+    #       scan-type: 'fs'          
+    #       scan-ref: '.'
+    #       format: 'template'
+    #       template: '@/contrib/sarif.tpl'
+    #       output: 'trivy-results.sarif'  
+    #       vuln-type: 'library'
+    #       severity: ${{ env.TRIVY_SEVERITY }}
+    #       ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
+    #       exit-code: '0'
+    #       hide-progress: 'false'
 
 
-      - name: Encode SARIF
-        run: echo "SARIF=$(base64 -w0 trivy-results.sarif)" >> $GITHUB_ENV
+    #   - name: Encode SARIF
+    #     run: echo "SARIF=$(base64 -w0 trivy-results.sarif)" >> $GITHUB_ENV
 
-      - name: Prepare payload
-        run: |
-          echo "{\"commit_sha\":\"${{ github.sha }}\",\"ref\":\"refs/heads/${{ github.ref_name }}\",\"sarif\":\"$SARIF\",\"tool_name\":\"scanner\"}" > body.json
+    #   - name: Prepare payload
+    #     run: |
+    #       echo "{\"commit_sha\":\"${{ github.sha }}\",\"ref\":\"refs/heads/${{ github.ref_name }}\",\"sarif\":\"$SARIF\",\"tool_name\":\"scanner\"}" > body.json
 
-      - name: Upload to target repo
-        run: |
-          gh api repos/ngdyquan213/${{ github.event.inputs.repository }}/code-scanning/sarifs \
-            --method POST \
-            --input body.json
-        env:
-          GH_TOKEN: ${{ secrets.TEST_API_KEY }}
-          # GITHUB_TOKEN: ${{ secrets.TEST_API_KEY }}
+    #   - name: Upload to target repo
+    #     run: |
+    #       gh api repos/ngdyquan213/${{ github.event.inputs.repository }}/code-scanning/sarifs \
+    #         --method POST \
+    #         --input body.json
+    #     env:
+    #       GH_TOKEN: ${{ secrets.TEST_API_KEY }}
+    #       # GITHUB_TOKEN: ${{ secrets.TEST_API_KEY }}
       
           
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
+    #   - name: Upload Trivy scan results to GitHub Security tab
+    #     uses: github/codeql-action/upload-sarif@v3
+    #     with:
+    #       sarif_file: 'trivy-results.sarif'
 
       - name: Trivy FS scan (fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@0.28.0
