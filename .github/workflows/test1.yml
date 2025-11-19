@@ -43,8 +43,6 @@ jobs:
           vuln-type: 'library'
           severity: ${{ env.TRIVY_SEVERITY }}
           ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
-          exit-code: '0'
-          hide-progress: 'false'
 
       - name: Get latest commit SHA of Repo B
         id: get_sha
