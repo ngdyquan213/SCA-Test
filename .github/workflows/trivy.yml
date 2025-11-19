@@ -172,3 +172,4 @@ jobs:
           projecttags: ${{ github.event.inputs.tags }}
           bomfilename: ${{ github.workspace }}/sbom.json
           autocreate: true
+          parentprojectname: "My-Parent-Project"
