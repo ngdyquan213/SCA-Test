@@ -123,6 +123,14 @@ jobs:
             fi
           done        
 
+      - name: Ensure parent project exists
+        run: |
+            curl -X PUT \
+            -H "X-Api-Key: ${{ secrets.DT_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "Main Platform", "version":"2.3.1"}' \
+            http://${{ secrets.TEST_HOSTNAME }}:${{ secrets.TEST_PORT }}/api/v1/project
+
       - name: Upload SBOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@v3
         with:
@@ -135,5 +143,3 @@ jobs:
           projecttags: ${{ github.event.inputs.tags }}
           bomfilename: ${{ github.workspace }}/sbom.json
           autocreate: true
-        #   parentname: "Main Platform"
-        #   parentversion: "2.3.1"
