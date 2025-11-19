@@ -128,7 +128,7 @@ jobs:
             curl -X PUT \
             -H "X-Api-Key: ${{ secrets.DT_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"name": "Main Platform", "version":"2.3.1"}' \
+            -d '{"name": "${{ github.event.inputs.repository }}", "version":"1.0.0"}' \
             http://${{ secrets.TEST_HOSTNAME }}:${{ secrets.TEST_PORT }}/api/v1/project
 
       - name: Upload SBOM to Dependency-Track
@@ -142,4 +142,6 @@ jobs:
           projectversion: ${{ steps.ver.outputs.version }}
           projecttags: ${{ github.event.inputs.tags }}
           bomfilename: ${{ github.workspace }}/sbom.json
+          parentname: "Main Platform"
+          parentversion: "1.0.0"
           autocreate: true
