@@ -142,6 +142,6 @@ jobs:
           projectversion: ${{ steps.ver.outputs.version }}
           projecttags: ${{ github.event.inputs.tags }}
           bomfilename: ${{ github.workspace }}/sbom.json
-          parentname: "Main Platform"
+          parentname: ${{ github.event.inputs.repository }}
           parentversion: "1.0.0"
           autocreate: true
