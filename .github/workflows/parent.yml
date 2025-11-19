@@ -135,5 +135,5 @@ jobs:
           projecttags: ${{ github.event.inputs.tags }}
           bomfilename: ${{ github.workspace }}/sbom.json
           autocreate: true
-          parentname: "Main Platform"
-          parentversion: "2.3.1"
+        #   parentname: "Main Platform"
+        #   parentversion: "2.3.1"
