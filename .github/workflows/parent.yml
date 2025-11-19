@@ -133,7 +133,7 @@ jobs:
     
       - name: Debug API
         run: |
-            curl -v http://${{ secrets.TEST_HOSTNAME }}:${{ secrets.TEST_PORT }}/api/v1/version
+            curl -v http://${{ secrets.TEST_HOSTNAME }}:${{ secrets.TEST_PORT }}/api/version
 
 
       - name: Upload SBOM to Dependency-Track
