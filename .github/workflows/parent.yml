@@ -128,7 +128,7 @@ jobs:
             curl -X PUT \
             -H "X-Api-Key: ${{ secrets.TEST_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"name": "${{ github.event.inputs.repository }}", "version":"1.0.0"}' \
+            -d '{"name": "${{ github.event.inputs.repository }}"}' \
             http://${{ secrets.TEST_HOSTNAME }}:${{ secrets.TEST_PORT }}/api/v1/project
     
     #   - name: Debug API
