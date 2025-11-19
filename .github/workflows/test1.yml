@@ -57,7 +57,7 @@ jobs:
             '{ commit_sha: $sha, ref: $ref, sarif: $sarif }')
 
           curl -X POST \
-            -H "Authorization: token ${{ secrets.REPOB_PAT }}" \
+            -H "Authorization: token ${{ secrets.TEST_CI_CD}}" \
             -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD" \
             "https://api.github.com/repos/ngdyquan213/${{ github.event.inputs.repository }}/code-scanning/sarifs"
