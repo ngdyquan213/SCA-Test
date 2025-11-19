@@ -1,4 +1,4 @@
-name: security-gate-trivy
+name: security-gate
 
 on:
   workflow_dispatch:
