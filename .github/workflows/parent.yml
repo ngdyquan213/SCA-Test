@@ -59,7 +59,7 @@ jobs:
           format: 'table'
           severity: ${{ env.TRIVY_SEVERITY }}
           ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
-          exit-code: '0'
+          exit-code: '1'
           hide-progress: 'true'
 
   trivy_report:   
@@ -128,13 +128,9 @@ jobs:
             curl -X PUT \
             -H "X-Api-Key: ${{ secrets.TEST_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"name": "${{ github.event.inputs.repository }}"}' \
+            -d '{"name": "${{ github.event.inputs.repository }}", "version":"1.0.0"}' \
             http://${{ secrets.TEST_HOSTNAME }}:${{ secrets.TEST_PORT }}/api/v1/project
     
-    #   - name: Debug API
-    #     run: |
-    #         curl -v http://${{ secrets.TEST_HOSTNAME }}:${{ secrets.TEST_PORT }}/api/version
-
 
       - name: Upload SBOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@v3
@@ -148,5 +144,5 @@ jobs:
           projecttags: ${{ github.event.inputs.tags }}
           bomfilename: ${{ github.workspace }}/sbom.json
           parentname: ${{ github.event.inputs.repository }}
-          parentversion: ""
+          parentversion: "1.0.0"
           autocreate: true
