@@ -68,7 +68,7 @@ jobs:
             --arg ref "refs/heads/${{ github.event.inputs.ref }}" \
             '{ commit_sha: $sha, ref: $ref, sarif: $sarif }')
 
-          curl -X POST \
+          curl -sS -X POST \
             -H "Authorization: token ${{ secrets.TEST_CI_CD}}" \
             -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD" \
