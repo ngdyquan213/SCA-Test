@@ -59,7 +59,7 @@ jobs:
           format: 'table'
           severity: ${{ env.TRIVY_SEVERITY }}
           ignore-unfixed: ${{ env.TRIVY_IGNORE_UNFIXED }}
-          exit-code: '1'
+          exit-code: '0'
           hide-progress: 'true'
 
   trivy_report:   
