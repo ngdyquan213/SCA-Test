@@ -6,7 +6,7 @@ on:
       repository:
         description: 'Repository to scan (owner/repo name only)'
         required: true
-        default: 'SCA'
+        default: 'SCA-Test'
       ref:
         description: 'Branch or tag to scan'
         required: true
