@@ -58,7 +58,9 @@ jobs:
 
       - name: Upload SARIF to Repo B
         run: |
-          SARIF_CONTENT=$(base64 -w0 trivy-results.sarif)
+          gzip -c trivy-results.sarif > trivy-results.sarif.gz
+
+          SARIF_CONTENT=$(base64 -w0 trivy-results.sarif.gz)
 
           JSON_PAYLOAD=$(jq -n \
             --arg sarif "$SARIF_CONTENT" \
